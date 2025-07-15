@@ -66,6 +66,8 @@ past_mean   = mean(price[t-h:t-1])
 Target = log(future_mean / past_mean)
 ```
 
+![MACD Predictions](MACD_predictions_with_signal_strength.png)
+
 Each model’s output is analyzed via MAE, R², and class accuracy (buy/sell/hold bins).
 
 ### 4. Clustering-Based Regime Feature
@@ -75,6 +77,8 @@ We enhance the feature set by appending a `cluster` label (from K-Means over pri
 * ⬆️ Bullish Regimes
 * ⬇️ Bearish Regimes
 * 🔁 Volatile Sideways Regimes
+
+![Clusters](clusters.png)
 
 ---
 
@@ -96,37 +100,7 @@ Classification Accuracy (Buy/Sell/Hold): ~92%
 
 SHAP values confirm the influence of both technical signals and model predictions in the meta-model, validating the multi-layer architecture.
 
----
-
-## 🔁 Backtesting Engine
-
-We simulate **realistic execution** using a position-based model:
-
-* Positions ∈ {1 (BUY), 0 (HOLD), -1 (SELL)}
-* Execution assumed at next price tick
-* Capital fully allocated (no margin)
-
-### Position Change Logic:
-
-```python
-cash += old_position * price  # square off
-cash -= new_position * price  # new position
-pnl = cash + new_position * price
-```
-
-### Smoothed Positioning:
-
-To avoid jittery trading, we use rolling smoothing over the position signal before computing PnL.
-
-### Results (Meta-Regressor):
-
-* Final PnL Multiplier: **1.3272×** over 20 days
-* Hourly Sharpe Ratio: **\~2.35**
-
-### Visuals:
-
-* Price chart with BUY/SELL markers
-* Cumulative PnL chart with returns annotation
+![Shap_Classification](classifier_meta_shap.png)
 
 ---
 
@@ -182,6 +156,50 @@ Still, they remain useful for:
 
 ---
 
+## 🔬 Evaluator Function: Realistic Performance Measurement
+
+We also defined `evaluate_strategy()` to:
+
+* Choose a random 5-day window
+* Compute cumulative returns, hourly Sharpe
+* Sample over multiple runs (Optuna-ready)
+
+This allows fast tuning and robust offline evaluation of various strategy configurations.
+
+---
+
+## 🔁 Backtesting
+
+We simulate **realistic execution** using a position-based model:
+
+* Positions ∈ {1 (BUY), 0 (HOLD / Take Profit), -1 (SELL)}
+* Execution through Marker Orders
+
+### Position Change Logic:
+
+```python
+cash += old_position * price  # square off
+cash -= new_position * price  # new position
+pnl = cash + new_position * price
+```
+
+### Smoothed Positioning:
+
+To avoid jittery trading, we use rolling smoothing over the position signal before computing PnL.
+
+### Results (Meta-Classification):
+
+* Final PnL Multiplier: ~ **1.4×** over 7 days
+
+### Visuals:
+
+* Price chart with BUY/SELL markers
+* Cumulative PnL chart with returns annotation
+
+![Classification Model Performance](Classifier_Performance.png)
+
+---
+
 ## 📦 Model Deployment
 
 We save every trained model for deployment:
@@ -197,18 +215,6 @@ saved_models/regime_models/{model_name}_xgb.pkl
 ```
 
 These can be loaded in real-time inference or paper-trading loops.
-
----
-
-## 🔬 Evaluator Function: Realistic Performance Measurement
-
-We also defined `evaluate_strategy()` to:
-
-* Choose a random 5-day window
-* Compute cumulative returns, hourly Sharpe
-* Sample over multiple runs (Optuna-ready)
-
-This allows fast tuning and robust offline evaluation of various strategy configurations.
 
 ---
 
