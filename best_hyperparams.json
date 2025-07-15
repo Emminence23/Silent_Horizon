@@ -1,0 +1,6 @@
+{
+    "horizon": 3,
+    "buy_thresh": 0.2320020042452706,
+    "sell_thresh": 0.21332346544093284,
+    "smoothing_window": 1
+}
