@@ -1,0 +1,6 @@
+target:
+  - url: "docs/"
+
+reinit: "a-random-string"
+
+ignore: []
